@@ -67,7 +67,7 @@ class Converter:
         :return: status dict
         """
         filename_mp4 = ''.join(filename.split('.')[:-1]) + '.mp4'
-        command = f"/usr/bin/ffmpeg -i {filename} -strict -2 -y {filename_mp4}"
+        command = f"/usr/bin/ffmpeg -i {filename} -movflags faststart -strict -2 -y {filename_mp4}"
         try:
             subprocess.run(command, shell=True, check=True, stdout=subprocess.DEVNULL,
                            stderr=open('ffmpeg_error.log', 'a'))

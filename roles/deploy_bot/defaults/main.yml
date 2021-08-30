@@ -3,3 +3,4 @@
 ansible_python_interpreter: '/usr/bin/python3'
 application_path: '/home/telegram-bot/webmtogif'
 token: ''
+url: ''

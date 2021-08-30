@@ -5,14 +5,16 @@ from threading import Thread
 import re
 import logging
 from json import dumps
-from os import getcwd
+from os import getcwd, remove
+import requests
+
 
 logging.basicConfig(filename='bot.log', filemode='a', format='%(asctime)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
 config = yaml.load(open('./config/config.yml', 'r').read())
 bot = Bot(config['token'])
-
+url = config['url']
 
 def video(u):
     c = Converter()
@@ -128,6 +130,34 @@ def formatting(u):
                                                 'имеет расширение отличное от webm.')
 
 
+def tiktok(u):
+    msg_id = bot.send_message(u.chat_id, 'Загрузка видеозаписи...')['message_id']
+    try:
+        result = requests.post(url=url + 'download', data={'url': u.url, 'chat_id': u.chat_id}).json()
+    except Exception as e:
+        logging.error('TikTok downloading error: ' + str(e))
+        bot.edit_message(u.chat_id, msg_id, 'Не удалось загрузить видео.')
+    else:
+        if result['status'] == 'success':
+            bot.edit_message(u.chat_id, msg_id, 'Отправка видео...')
+            try:
+                sending = bot.send_video(u.chat_id, result['path'])
+            except Exception as e:
+                logging.error('Video uploading error: ' + str(e))
+                bot.edit_message(u.chat_id, msg_id, 'Ошибка при отправке видео.')
+                remove(result['path'])
+            else:
+                if sending['status'] == 'ok':
+                    bot.delete_message(u.chat_id, msg_id)
+                    remove(result['path'])
+                else:
+                    logging.error('Video uploading error: ' + str(sending['error']))
+                    bot.edit_message(u.chat_id, msg_id, 'Ошибка при отправке видео.')
+        else:
+            bot.edit_message(u.chat_id, msg_id, 'Не удалось загрузить видео.')
+            logging.error('TikTok downloading error: ' + result['error'])
+
+
 if __name__ == '__main__':
     updates = bot.get_updates()
     if updates['status'] != 'ok':
@@ -151,8 +181,11 @@ if __name__ == '__main__':
                     bot.send_message(update.chat_id, message)
 
             elif update.type == 'url':
-                t = Thread(target=formatting, args=(update,))
-                t.start()
+                if 'tiktok' in update.url:
+                    tiktok(update)
+                else:
+                    t = Thread(target=formatting, args=(update,))
+                    t.start()
 
             elif update.type == 'callback_query':
                 t = Thread(target=video, args=(update,))

@@ -133,7 +133,7 @@ def formatting(u):
 def tiktok(u):
     msg_id = bot.send_message(u.chat_id, 'Загрузка видеозаписи...')['message_id']
     try:
-        result = requests.post(url=url + 'download', data={'url': u.url, 'chat_id': u.chat_id}).json()
+        result = requests.post(url=url + 'download_video', data={'url': u.url, 'chat_id': u.chat_id}).json()
     except Exception as e:
         logging.error('TikTok downloading error: ' + str(e))
         bot.edit_message(u.chat_id, msg_id, 'Не удалось загрузить видео.')

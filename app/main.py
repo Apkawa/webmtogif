@@ -172,12 +172,16 @@ if __name__ == '__main__':
             update = Update(i)
             if update.type == 'command':
                 if update.command == '/start':
-                    bot.send_message(update.chat_id, 'Этот бот умеет конвертировать видео из webm в mp4 или gif!\n\n'
+                    bot.send_message(update.chat_id, 'Этот бот умеет конвертировать webm видео в формат gif и mp4,'
+                                                     'а также загружать видео из TikTok.\n\n'
                                                      '/help чтобы узнать подробности.')
 
                 elif update.command == '/help':
-                    message = 'Этот бот умеет ковертировать видео из формата webm в mp4 или gif!\n\n' \
-                              'Чтобы начать конвертацию, отправь ссылку на видео и выбери, что хочешь с ним сделать.'
+                    message = 'Чтобы конвертировать webm видео, отправь боту ссылку на него и выбери нужное ' \
+                              'действие.\n\n' \
+                              'Чтобы загрузить видео из TikTok, просто отправь на него ссылку\n\n' \
+                              'Также можно загружать видео из Pikabu, просто отправив ссылку на нужный пост.' \
+
                     bot.send_message(update.chat_id, message)
 
             elif update.type == 'url':

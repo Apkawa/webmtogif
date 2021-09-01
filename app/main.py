@@ -1,13 +1,14 @@
 import yaml
 from modules.bot import Bot, Update
 from modules.converter import Converter
+from modules.mysql_connector import MysqlCollector
 from threading import Thread
 import re
 import logging
 from json import dumps
 from os import getcwd, remove
 import requests
-
+from datetime import datetime
 
 logging.basicConfig(filename='bot.log', filemode='a', format='%(asctime)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -15,6 +16,24 @@ logging.basicConfig(filename='bot.log', filemode='a', format='%(asctime)s - %(le
 config = yaml.load(open('./config/config.yml', 'r').read())
 bot = Bot(config['token'])
 url = config['url']
+
+server = config['server']
+username = config['username']
+passwd = config['passwd']
+db = config['db']
+table = config['table']
+
+
+def register_user(user_id):
+    collector = MysqlCollector(server=server, username=username, passwd=passwd, db=db)
+    r = collector.select(table=table, where=f'user_id={user_id}')
+    if r['status']:
+        if user_id not in r['data']:
+            time = datetime.isoformat(datetime.now())
+            r = collector.insert(table=table, data={'user_id': user_id, 'time': time})
+    collector.close()
+    return r
+
 
 def video(u):
     c = Converter()
@@ -170,6 +189,9 @@ if __name__ == '__main__':
     while True:
         for i in updates['updates']:
             update = Update(i)
+            result = register_user(i['message']['from']['id'])
+            if not result['status']:
+                logging.error('User registration error: ' + str(result['data']))
             if update.type == 'command':
                 if update.command == '/start':
                     bot.send_message(update.chat_id, 'Этот бот умеет конвертировать webm видео в формат gif и mp4,'

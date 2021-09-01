@@ -1,4 +1,4 @@
 .idea/
-app/config/config.yml
+config.yml
 *.log
-app/modules/__pycache__/
+__pycache__

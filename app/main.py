@@ -28,11 +28,21 @@ def register_user(user_id):
     collector = MysqlCollector(server=server, username=username, passwd=passwd, db=db)
     r = collector.select(table=table, where=f'user_id={user_id}')
     if r['status']:
-        if user_id not in r['data']:
+        if not r['data']:
             time = datetime.isoformat(datetime.now())
             r = collector.insert(table=table, data={'user_id': user_id, 'time': time})
     collector.close()
     return r
+
+
+def get_stats(u, upd):
+    if u['message']['from']['id'] not in [326911795, 145902753]:
+        bot.send_message(chat_id=upd.chat_id, message='Нет доступа')
+    else:
+        collector = MysqlCollector(server=server, username=username, passwd=passwd, db=db)
+        r = collector.select(table=table, cols='user_id')
+        if r['status']:
+            print(r['data'])
 
 
 def video(u):
@@ -205,6 +215,19 @@ if __name__ == '__main__':
                               'Также можно загружать видео из Pikabu, просто отправив ссылку на нужный пост.' \
 
                     bot.send_message(update.chat_id, message)
+
+                elif update.command == '/stats':
+                    if i['message']['from']['id'] not in [326911795, 145902753]:
+                        bot.send_message(update.chat_id, 'Нет доступа')
+                    else:
+                        collector = MysqlCollector(server=server, username=username, passwd=passwd, db=db)
+                        r = collector.select(table=table, cols=['user_id'])
+                        if r['status']:
+                            users = len(r['data'])
+                            bot.send_message(update.chat_id, f'Всего пользователей: {users}')
+                        else:
+                            logging.error('Getting stats error: ' + str(r['data']))
+                            bot.send_message(update.chat_id, 'Произошла ошибка.')
 
             elif update.type == 'url':
                 if 'tiktok' in update.url:
